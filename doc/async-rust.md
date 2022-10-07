@@ -794,3 +794,23 @@ flushed, leading to confusing (or no!) output.
 - [Tokio crate docs](https://docs.rs/crate/tokio/latest)
 - [Futures crate docs](https://docs.rs/futures/latest/futures)
 - [Tokio main attribute](https://docs.rs/tokio/latest/tokio/attr.main.html)
+
+## Finally...
+
+Now, have a play with the bundled async utility. For example,
+
+```bash
+$ cargo run -- 'wait-for-all'
+```
+
+Task ideas:
+
+- Try changing a few functions to see what happens.
+
+- Try adding a timeout command to run _n_ tasks for a specified period of time, then:
+  - kill them all.
+  - wait for the first, and then kill the rest.
+
+## The End
+
+Thanks for not falling asleep! ;)
