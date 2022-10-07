@@ -30,7 +30,7 @@
 - A thread is _spawned_ like this:
 
   ```rust
-  let handle = thread::spawn(some_function()));
+  let handle = thread::spawn(some_function));
   ```
 
 - **Note:** `spawn()` returns a `JoinHandle` type.
