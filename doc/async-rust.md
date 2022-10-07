@@ -763,14 +763,33 @@ flushed, leading to confusing (or no!) output.
 
 ## Comparison of sync, threaded and async code
 
-| Programming model | Run immediately? | Returns | `spawn()` param | Wait technique |
+| Programming model | Spawn | Run immediately? | Returns | Wait technique |
 |-|-|-|-|-|
-| synchronous | yes | Specified function return type | n/a | n/a |
-| thread | yes | `JoinHandle` type | Function name (address) | `.join()` method |
-| `async` | no | `Future` trait | "Called" function | `.await` keyword, `block*!()`/`join*!()` macro |
+| synchronous | (function call) | yes | Specified function return type | n/a |
+| thread | [`thread::spawn(address)`](https://doc.rust-lang.org/std/thread/fn.spawn.html) | yes | [`JoinHandle`](https://doc.rust-lang.org/std/thread/fn.spawn.html) type `[1]` | `.join()` method |
+| `async` | "n/a" | no | `Future` trait | `.await` keyword _et al_ `[3]` |
+| `async` task | [`tokio::spawn()`](https://docs.rs/tokio/latest/tokio/fn.spawn.html) | no | [`JoinHandle`](https://docs.rs/tokio/latest/tokio/task/struct.JoinHandle.html) type `[2]` | `.await` keyword _et al_ `[3]` |
+
+<hr/>
+
+- `[1]`: `std::thread::JoinHandle`.
+- `[2]`: `tokio::task::JoinHandle`.
+- `[3]`: See next slide!
+
+## Async wait methods
+
+| Async wait call | type | Description |
+|-|-|-|
+| [`.await`](https://doc.rust-lang.org/std/keyword.await.html) | keyword | wait for a single task |
+| [`tokio::join!()`](https://docs.rs/tokio/latest/tokio/macro.join.html) | macro | wait for all tasks |
+| [`futures::future::join_all()`](https://docs.rs/futures/latest/futures/future/fn.join_all.html) | function | wait for all tasks |
+| [`tokio::select!{}`](https://docs.rs/tokio/latest/tokio/macro.select.html) | macro | wait for first task (and kill others) |
+| [`tokio::runtime::block_on()`](https://docs.rs/tokio/latest/tokio/runtime/struct.Runtime.html#method.block_on) | method | wait for all tasks |
+| [`futures::executor::block_on()`](https://docs.rs/futures/latest/futures/executor/fn.block_on.html) | function | wait for all tasks |
 
 ## References
 
+- [Rust async book](https://rust-lang.github.io/async-book)
 - [Tokio tutorial](https://tokio.rs/tokio/tutorial)
 - [Tokio crate docs](https://docs.rs/crate/tokio/latest)
 - [Futures crate docs](https://docs.rs/futures/latest/futures)
