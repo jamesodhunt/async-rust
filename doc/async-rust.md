@@ -1,3 +1,9 @@
+## Intro
+
+Grab a coffee or a pillow (your choice! ;)
+
+Ready? Let's go...!
+
 ## Overview
 
 - Overview of "async" (asynchronous) rust code.
