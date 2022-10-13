@@ -733,11 +733,11 @@ To make a test `async`:
 
 | Term | Description |
 |-|-|
-| `async` | rust keyword |
-| `await` | rust keyword |
-| `Future` | rust standard library trait (`std::future::Future`) |
-| task | Unit of work represented by a `Future` |
 | Tokio | Crate that provides an async runtime and functions |
+| `async` | rust keyword to make a function run in parallel |
+| `await` | rust keyword to wait for an async function to finish |
+| `Future` | rust standard library trait (`std::future::Future`) that represents a runnable async function |
+| task | Unit of work represented by a `Future` (an async function) |
 
 ## Gotchas
 
