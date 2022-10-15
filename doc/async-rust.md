@@ -729,6 +729,28 @@ To make a test `async`:
   }
   ```
 
+## Async: Traits
+
+To create an async trait (aka interface / API), you need to do two
+things:
+
+- `cargo add async-trait`
+- Add `#[async_trait]` to your trait definition
+
+### Async: Trait example
+
+```rust
+#[async_trait]
+trait Foo: Send + Sync {
+	fn sync_operation_1(&self) -> Result<()>;
+	fn sync_operation_2(&self) -> Result<()>;
+
+	async fn async_operation_1(&self) -> Result<()>;
+	async fn async_operation_2(&self) -> Result<()>;
+	async fn async_operation_3(&self) -> Result<()>;
+}
+```
+
 ## Key terms
 
 | Term | Description |
