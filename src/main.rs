@@ -13,15 +13,21 @@ fn get_random_sleep_time() -> u64 {
     rng.gen_range(1..100)
 }
 
+fn get_random_sleep_duration() -> Duration {
+    let ms = get_random_sleep_time();
+
+    Duration::from_millis(ms)
+}
+
 //--------------------------------------------------------------------
 // A set of functions that sleep for a random amount of time
 
 async fn async_foo() -> Result<()> {
     eprintln!("INFO: START: foo");
 
-    let ms = get_random_sleep_time();
+    let duration = get_random_sleep_duration();
 
-    tokio::time::sleep(Duration::from_millis(ms)).await;
+    tokio::time::sleep(duration).await;
 
     eprintln!("INFO: END: foo");
 
@@ -31,9 +37,9 @@ async fn async_foo() -> Result<()> {
 async fn async_bar() -> Result<()> {
     eprintln!("INFO: START: bar");
 
-    let ms = get_random_sleep_time();
+    let duration = get_random_sleep_duration();
 
-    tokio::time::sleep(Duration::from_millis(ms)).await;
+    tokio::time::sleep(duration).await;
 
     eprintln!("INFO: END: bar");
 
@@ -43,9 +49,9 @@ async fn async_bar() -> Result<()> {
 async fn async_baz() -> Result<()> {
     eprintln!("INFO: START: baz");
 
-    let ms = get_random_sleep_time();
+    let duration = get_random_sleep_duration();
 
-    tokio::time::sleep(Duration::from_millis(ms)).await;
+    tokio::time::sleep(duration).await;
 
     eprintln!("INFO: END: baz");
 
@@ -57,8 +63,10 @@ async fn async_slow() -> Result<()> {
 
     let secs = 3;
 
+    let duration = Duration::from_secs(secs);
+
     // A long (asynchronous) sleep.
-    tokio::time::sleep(Duration::from_secs(secs)).await;
+    tokio::time::sleep(duration).await;
 
     eprintln!("INFO: END: async_slow");
 
@@ -72,8 +80,10 @@ async fn async_run_blocking_code() -> Result<()> {
 
     let secs = 3;
 
+    let duration = Duration::from_secs(secs);
+
     // XXX: BUG: This runs a _synchronous_ sleep call that blocks the runtime.
-    std::thread::sleep(Duration::from_secs(secs));
+    std::thread::sleep(duration);
 
     eprintln!("INFO: END: async_run_blocking_code");
 
@@ -219,10 +229,11 @@ fn main() -> Result<()> {
 
     // Block on allows a synchronous function to run an async function
     // and wait for it to finish.
+
     let result = rt.block_on(real_main());
 
     if let Err(e) = result {
-        eprintln!("ERROR: {}: {:#?}", program_name, e);
+        eprintln!("ERROR: {program_name}: {e:#?}");
         exit(1);
     }
 
