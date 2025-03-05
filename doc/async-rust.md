@@ -65,7 +65,11 @@ let c5 = || { println!("hello"); }
 
 // closure with 1 arg and no return value
 let c6 = |value| { println!("{value}"); }
+```
 
+## Closures (3)
+
+```rust
 // closures with no args and a return value
 let c7 = || -> u64 { println!("hello"); 42 };
 let c8 = || -> Result<()> { println!("hello"); Ok(()); }
