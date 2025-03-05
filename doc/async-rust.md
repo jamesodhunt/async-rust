@@ -122,6 +122,11 @@ let handle = thread::spawn(move || -> Result<()> {
 println!("Message outside thread: {:?}", msg);
 ```
 
+> **Note:**
+>
+> - This is a contrived example!
+> - Rather than `move`-ing the string into the closure, you could simply reference it.
+
 ## Closures: summary
 
 <table border=1>
