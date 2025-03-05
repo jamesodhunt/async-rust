@@ -77,7 +77,7 @@ let c8 = || -> Result<()> { println!("hello"); Ok(()); }
 // closure with 2 args and a return type
 let c9 = |s, n| -> Result<()> { println!("s: {s}, n: {n}"); Ok(()); }
 
-// closure with 2 explicit args and a return type
+// closure with 2 explicitly typed args and a return type
 let c10 = |s: &str, n: u64| -> Result<()> { println!("string: {s}, num: {n}"); Ok(()); }
 ```
 
