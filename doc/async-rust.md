@@ -31,6 +31,172 @@ Ready? Let's go...!
     - [`runtime-rs`](https://github.com/kata-containers/kata-containers/tree/main/src/runtime-rs)
     - [`Dragonball`](https://github.com/kata-containers/kata-containers/tree/main/src/dragonball)
 
+## Closures
+
+- A rust _closure_ is like an anonymous function that "captures" variables.
+- It has access to all variables in the scope in which it is called.
+- By default, closure variables are captured _by reference_.
+
+## Closures (2)
+
+Some examples of closures:
+
+```rust
+// closure with no args and no return value
+let c1 = || { println!("hello"); }
+
+// closure with 1 arg and no return value
+let c2 = |value| { println!("{value}"); }
+
+// closure with no args and a return value
+let c3 = || -> Result<()> { println!("hello"); Ok(()); }
+
+// closure with 2 explicit args and a return type
+let c4 = |s: &str, n: u64| -> Result<()> { println!("string: {s}, num: {n}"); Ok(()); }
+```
+
+## Closures: move
+
+Add the `move` keyword to capture closure variables _by value_.
+
+```rust
+let msg = "foo".to_string();
+
+let handle = thread::spawn(move || -> Result<()> {
+    println!("Message in thread: {:?}", msg);
+
+    Ok(())
+};
+
+// ERROR: BUG: This will not compile as the closure in the thread now owns "msg"!
+println!("Message outside thread: {:?}", msg);
+```
+
+> **Notes:**
+>
+> - The closure has access to all visible variables in its scope.
+>
+> - Once called, the closure **owns** the `msg` variable
+>   (even though it was not passed in to the closure as a parameter!)
+
+## Closures: move (2)
+
+```rust
+let msg = "foo".to_string();
+
+let msg_for_thread = msg.clone();
+
+let handle = thread::spawn(move || -> Result<()> {
+    println!("Message in thread: {:?}", msg_for_thread);
+
+    Ok(())
+};
+
+// XXX: Ok! The thread has it's own copy of the variable.
+println!("Message outside thread: {:?}", msg);
+```
+
+## Closures: summary
+
+<table border=1>
+<tr bgcolor="gainsboro">
+    <th>Closure</th>
+    <th>Equivalent function</th>
+    <th>Params</th>
+    <th>Return value</th>
+    <th>Description</th>
+</tr>
+
+<tr>
+    <td><pre>|| println!("hello");</pre></td>
+    <td><pre>fn name() { println!("hello"); }</pre></td>
+    <td>no</td>
+    <td>none</td>
+    <td></td>
+</tr>
+
+<tr>
+    <td><pre>|| 7</pre></td>
+    <td><pre>fn name() { 7 }</pre></td>
+    <td>no</td>
+    <td>number</td>
+    <td>Implicit return type</td>
+</tr>
+
+<tr>
+    <td><pre>|| "foo".to_string()</pre></td>
+    <td><pre>fn name() { "foo".to_string() }</pre></td>
+    <td>no</td>
+    <td>`String`</td>
+    <td>Implicit return type</td>
+</tr>
+
+<tr>
+    <td><pre>|| -> usize { 1234567890 } </pre></td>
+    <td><pre>fn name() -> usize { 1234567890 }</pre></td>
+    <td>no</td>
+    <td>number</td>
+    <td>Explicit return type<br>Note the required braces now!</br></td>
+</tr>
+<tr>
+    <td><pre>|s| println!("{s}");</pre></td>
+    <td>
+    <pre>
+    fn name<D>(s: D)
+    where
+        D: Display,
+    {
+        println!("{s}");
+    }
+    </pre>
+    </td>
+    <td>one</td>
+    <td>none</td>
+    <td>Implicit parameter type</td>
+</tr>
+
+<tr>
+    <td><pre>|s: &str| println!("{s}");</pre></td>
+    <td><pre>fn name(s: &str) { println!("{s}"); }</pre></td>
+    <td>`&str`</td>
+    <td>none</td>
+    <td>Explicit parameter type</td>
+</tr>
+
+<tr>
+    <td><pre>|s: String| -> usize { s.len() };</pre></td>
+    <td><pre>fn name(s: String) -> usize { s.len(); }</pre></td>
+    <td>`String`</td>
+    <td>`usize`</td>
+    <td>Explicit parameter and return types</td>
+</tr>
+
+<tr>
+    <td>
+    <pre>
+    |s: &str| -> Result<()> {
+        println!("{s}");
+
+        Ok(())
+    };
+    </pre>
+    </td>
+
+    <td>
+    <pre>
+    fn name(s: &str) -> Result<()> {
+        println!("{s}");
+
+        Ok(())
+    }
+    </pre>
+    </td>
+    <td>`&str`</td>
+    <td>`Result`</td>
+    <td>Explicit parameter and return types</td>
+</tr>
+</table>
+
 ## Threads: Create a thread
 
 - A thread is _spawned_ like this:
@@ -71,7 +237,7 @@ fn real_main() -> Result<()> {
     for child in threads {
         child
             .join()
-            .map_err(|e| anyhow!("{:?}", e))
+            .map_err(|e| anyhow!("{e:?}"))
             .context("join failed")?;
     }
 
@@ -80,7 +246,7 @@ fn real_main() -> Result<()> {
 
 fn main() {
     if let Err(e) = real_main() {
-        eprintln!("ERROR: {:#}", e);
+        eprintln!("ERROR: {e:#}");
         exit(1);
     }
 }
@@ -177,145 +343,14 @@ let handle = thread::spawn(|| -> Result<()> {
 
 handle.join();
 ```
-## Closures
 
-- A rust _closure_ is like an anonymous function that "captures" variables.
-- by default, closure variables are captured _by reference_.
-
-## Closures: move
-
-Add the `move` keyword to capture closure variables _by value_.
+Compare this to how we define the previous closure (where we didn't
+return a value):
 
 ```rust
-let msg = "foo".to_string();
-
-let handle = thread::spawn(move || -> Result<()> {
-    println!("Message in thread: {:?}", msg);
-
-    Ok(())
-};
-
-// ERROR: BUG: This will not compile as the thread now owns "msg"!
-println!("Message outside thread: {:?}", msg);
+let handle = thread::spawn(|| sleep(Duration::from_millis(1)));
+handle.join();
 ```
-
-## Closures: move (2)
-
-```rust
-let msg = "foo".to_string();
-
-let msg_for_thread = msg.clone();
-
-let handle = thread::spawn(move || -> Result<()> {
-    println!("Message in thread: {:?}", msg_for_thread);
-
-    Ok(())
-};
-
-// XXX: Ok! The thread has it's own copy of the variable.
-println!("Message outside thread: {:?}", msg);
-```
-
-## Closures: summary
-
-<table border=1>
-<tr bgcolor="gainsboro">
-    <th>Closure</th>
-    <th>Equivalent function</th>
-    <th>Params</th>
-    <th>Return value</th>
-    <th>Description</th>
-</tr>
-
-<tr>
-    <td><pre>|| println!("hello");</pre></td>
-    <td><pre>fn name() { println!("hello"); }</pre></td>
-    <td>no</td>
-    <td>none</td>
-    <td></td>
-</tr>
-
-<tr>
-    <td><pre>|| 7</pre></td>
-    <td><pre>fn name() { 7 }</pre></td>
-    <td>no</td>
-    <td>number</td>
-    <td>Implicit return type</td>
-</tr>
-
-<tr>
-    <td><pre>|| "foo".to_string()</pre></td>
-    <td><pre>fn name() { "foo".to_string() }</pre></td>
-    <td>no</td>
-    <td>`String`</td>
-    <td>Implicit return type</td>
-</tr>
-
-<tr>
-    <td><pre>|| -> usize { 1234567890 } </pre></td>
-    <td><pre>fn name() -> usize { 1234567890 }</pre></td>
-    <td>no</td>
-    <td>number</td>
-    <td>Explicit return type<br>Note the required braces now!</br></td>
-</tr>
-<tr>
-    <td><pre>|s| println!("{}", s);</pre></td>
-    <td>
-    <pre>
-    fn name<D>(s: D)
-    where
-        D: Display,
-    {
-        println!("{}", s);
-    }
-    </pre>
-    </td>
-    <td>one</td>
-    <td>none</td>
-    <td>Implicit parameter type</td>
-</tr>
-
-<tr>
-    <td><pre>|s: &str| println!("{}", s);</pre></td>
-    <td><pre>fn name(s: &str) { println!("{}", s); }</pre></td>
-    <td>`&str`</td>
-    <td>none</td>
-    <td>Explicit parameter type</td>
-</tr>
-
-<tr>
-    <td><pre>|s: String| -> usize { s.len() };</pre></td>
-    <td><pre>fn name(s: String) -> usize { s.len(); }</pre></td>
-    <td>`String`</td>
-    <td>`usize`</td>
-    <td>Explicit parameter and return types</td>
-</tr>
-
-<tr>
-    <td>
-    <pre>
-    |s: &str| -> Result<()> {
-        println!("{}", s);
-
-        Ok(())
-    };
-    </pre>
-    </td>
-
-    <td>
-    <pre>
-    fn name(s: &str) -> Result<()> {
-        println!("{}", s);
-
-        Ok(())
-    }
-    </pre>
-    </td>
-    <td>`&str`</td>
-    <td>`Result`</td>
-    <td>Explicit parameter and return types</td>
-</tr>
-</table>
 
 ## Threads: summary
 
