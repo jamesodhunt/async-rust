@@ -337,7 +337,7 @@ fn real_main() -> Result<()> {
     for child in threads {
         child
             .join()
-            .map_err(|e| anyhow!("{:?}", e))
+            .map_err(|e| anyhow!("{e:?}"))
             .context("join failed")?
             .context("thread function failed")?;
     }
@@ -402,7 +402,7 @@ handle.join();
 - You need an async _runtime_.
 - The most popular runtime is _Tokio_.
 - _Tokio is an event-driven, non-blocking I/O platform_.
-- Tokio also provides fully async versions of standard (synchronous libraries).
+- Tokio also provides fully async versions of standard (synchronous) libraries.
 - Async rust code is similar to threading model, but naturally
   scaleable and easier!
 
@@ -421,7 +421,7 @@ fn main() {
     let result = ...; // See below for details! ;)
 
     if let Err(e) = result {
-        eprintln!("ERROR: {}: {:#?}", program_name, e);
+        eprintln!("ERROR: {program_name}: {e:#?}");
         exit(1);
     }
 }
@@ -453,7 +453,7 @@ async fn real_main() -> Result<()> {
   }
   ```
 
-- The `async` must come **immediately** before the
+- The `async` must come **immediately before** the
   `fn` keyword:
 
   ```rust
@@ -477,7 +477,7 @@ async fn real_main() -> Result<()> {
   let y = foo();
   ```
 
-- Answer: Not much! The functions are have not started running yet!!
+- Answer: Not much! The functions have not started running yet!!
 
 ## Async: Call and wait for an async function (2)
 
@@ -514,7 +514,7 @@ let result = future.await?;
 // successfully, so we can check it's return value.
 match result {
   Ok(()) => (),
-  Err(e) => panic("foo() failed with error: {:?}", e),
+  Err(e) => panic("foo() failed with error: {e:?}"),
 };
 ```
 
@@ -803,7 +803,7 @@ things:
 - `cargo add async-trait`
 - Add `#[async_trait]` to your trait definition
 
-### Async: Trait example
+## Async: Trait example
 
 ```rust
 #[async_trait]
