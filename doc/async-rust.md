@@ -25,6 +25,7 @@ Ready? Let's go...!
 
 - Why should I care about async rust?
   - Makes better use of available resources.
+  - Allows your code to be made "scaleable" with relatively little effort.
   - It's very fast!
   - The following Kata Containers components are written in async rust:
     - [agent](https://github.com/kata-containers/kata-containers/tree/main/src/agent)
@@ -33,26 +34,47 @@ Ready? Let's go...!
 
 ## Closures
 
+Before looking at threads and async code, we need to look at closures...
+
 - A rust _closure_ is like an anonymous function that "captures" variables.
 - It has access to all variables in the scope in which it is called.
 - By default, closure variables are captured _by reference_.
+- You can recognise a closure by the pair of pipe characters: `||`.
 
 ## Closures (2)
 
 Some examples of closures:
 
 ```rust
+// closure that returns a value implicitly.
+// Remember: a functions return value is the last statement in the function!
+let c1 = || 7;
+
+// as above, but with braces around the body
+let c2 = || { 7 };
+
+// closure that prints a message
+let c3 = || println!("hello");
+
+// as above, but with braces around the body
+// Note: Technically, this closure returns '()'.
+let c4 = || { println!("hello"); };
+
 // closure with no args and no return value
-let c1 = || { println!("hello"); }
+let c5 = || { println!("hello"); }
 
 // closure with 1 arg and no return value
-let c2 = |value| { println!("{value}"); }
+let c6 = |value| { println!("{value}"); }
 
-// closure with no args and a return value
-let c3 = || -> Result<()> { println!("hello"); Ok(()); }
+// closures with no args and a return value
+let c7 = || -> u64 { println!("hello"); 42 };
+let c8 = || -> Result<()> { println!("hello"); Ok(()); }
+
+// closure with 2 args and a return type
+let c9 = |s, n| -> Result<()> { println!("s: {s}, n: {n}"); Ok(()); }
 
 // closure with 2 explicit args and a return type
-let c4 = |s: &str, n: u64| -> Result<()> { println!("string: {s}, num: {n}"); Ok(()); }
+let c10 = |s: &str, n: u64| -> Result<()> { println!("string: {s}, num: {n}"); Ok(()); }
 ```
 
 ## Closures: move
