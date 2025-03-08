@@ -268,8 +268,8 @@ fn real_main() -> Result<()> {
     for child in threads {
         child
             .join()
-            .map_err(|e| anyhow!("{e:?}"))
-            .context("join failed")?;
+            .map_err(|e| anyhow!("{e:?}")) // Convert JoinHandle into anyhow error
+            .context("join failed")?;      // Add extra detail and return on error
     }
 
     Ok(())
@@ -337,9 +337,9 @@ fn real_main() -> Result<()> {
     for child in threads {
         child
             .join()
-            .map_err(|e| anyhow!("{e:?}"))
-            .context("join failed")?
-            .context("thread function failed")?;
+            .map_err(|e| anyhow!("{e:?}"))        // } XXX: Look at these
+            .context("join failed")?              // } XXX: lines carefully!
+            .context("thread function failed")?;  // } XXX: Do they make sense?
     }
 
     Ok(())
