@@ -89,13 +89,13 @@ Add the `move` keyword to capture closure variables _by value_.
 let msg = "foo".to_string();
 
 let handle = thread::spawn(move || -> Result<()> {
-    println!("Message in thread: {:?}", msg);
+    println!("Message in thread: {msg:?}");
 
     Ok(())
 };
 
 // ERROR: BUG: This will not compile as the closure in the thread now owns "msg"!
-println!("Message outside thread: {:?}", msg);
+println!("Message outside thread: {msg:?}");
 ```
 
 > **Notes:**
@@ -113,13 +113,13 @@ let msg = "foo".to_string();
 let msg_for_thread = msg.clone();
 
 let handle = thread::spawn(move || -> Result<()> {
-    println!("Message in thread: {:?}", msg_for_thread);
+    println!("Message in thread: {msg_for_thread:?}");
 
     Ok(())
 };
 
 // XXX: Ok! The thread has it's own copy of the variable.
-println!("Message outside thread: {:?}", msg);
+println!("Message outside thread: {msg:?}");
 ```
 
 > **Note:**
@@ -277,7 +277,7 @@ fn real_main() -> Result<()> {
 
 fn main() {
     if let Err(e) = real_main() {
-        eprintln!("ERROR: {e:#}");
+        eprintln!("ERROR: {e:#?}");
         exit(1);
     }
 }
@@ -347,7 +347,7 @@ fn real_main() -> Result<()> {
 
 fn main() {
     if let Err(e) = real_main() {
-        eprintln!("ERROR: {:#}", e);
+        eprintln!("ERROR: {e:#?}");
         exit(1);
     }
 }
@@ -410,10 +410,6 @@ handle.join();
 
 ```rust
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-
-    let program_name = &args[0];
-
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()?;
@@ -421,7 +417,7 @@ fn main() {
     let result = ...; // See below for details! ;)
 
     if let Err(e) = result {
-        eprintln!("ERROR: {program_name}: {e:#?}");
+        eprintln!("ERROR: {e:#?}");
         exit(1);
     }
 }
@@ -514,8 +510,157 @@ let result = future.await?;
 // successfully, so we can check it's return value.
 match result {
   Ok(()) => (),
-  Err(e) => panic("foo() failed with error: {e:?}"),
+  Err(e) => panic("foo() failed with error: {e:#?}"),
 };
+```
+
+## Review: synchronous rust template
+
+File [`crates/test-sync-template/src/main.rs`](../crates/test-sync-template/src/main.rs):
+
+```rust
+use anyhow::{Result, anyhow};
+use std::env;
+use std::process::exit;
+
+fn test(value: &str) -> Result<()> {
+    println!("INFO: value: {value:?}");
+
+    Ok(())
+}
+
+fn real_main() -> Result<()> {
+    let args: Vec<String> = env::args().collect();
+
+    let value = args
+        .get(1)
+        .ok_or("specify string")
+        .map_err(|e| anyhow!(e))?;
+
+    test(value)
+}
+
+fn main() -> Result<()> {
+    let args: Vec<String> = env::args().collect();
+
+    let program_name = args
+        .first()
+        .ok_or("failed to get program name")
+        .map_err(|e| anyhow!(e))?;
+
+    let result = real_main();
+
+    if let Err(e) = result {
+        eprintln!("ERROR: {program_name}: {e:#?}");
+        exit(1);
+    }
+
+    result
+}
+```
+
+## Review: asynchronous rust template
+
+File [`crates/test-tokio-async-template/src/main.rs`](../crates/test-tokio-async-template/src/main.rs):
+
+```rust
+use anyhow::{Result, anyhow};
+use std::env;
+use std::process::exit;
+
+async fn test(value: &str) -> Result<()> {
+    println!("INFO: value: {value:?}");
+
+    Ok(())
+}
+
+async fn real_main() -> Result<()> {
+    let args: Vec<String> = env::args().collect();
+
+    let value = args
+        .get(1)
+        .ok_or("specify string")
+        .map_err(|e| anyhow!(e))?;
+
+    test(value).await
+}
+
+fn main() -> Result<()> {
+    let args: Vec<String> = env::args().collect();
+
+    let program_name = args
+        .first()
+        .ok_or("failed to get program name")
+        .map_err(|e| anyhow!(e))?;
+
+    // Create a multi-threaded async runtime with all features enabled.
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?;
+
+    // Block on allows a synchronous function to run an async function
+    // and wait for it to finish.
+    let result = rt.block_on(real_main());
+
+    if let Err(e) = result {
+        eprintln!("ERROR: {program_name}: {e:#?}");
+        exit(1);
+    }
+
+    result
+}
+```
+
+## Compare sync and async templates
+
+```bash
+$ diff -u crates/*/src/main.rs
+```
+
+```diff
+--- crates/test-sync-template/src/main.rs
++++ crates/test-tokio-async-template/src/main.rs
+@@ -2,13 +2,13 @@
+ use std::env;
+ use std::process::exit;
+
+-fn test(value: &str) -> Result<()> {
++async fn test(value: &str) -> Result<()> {
+     println!("INFO: value: {value:?}");
+
+     Ok(())
+ }
+
+-fn real_main() -> Result<()> {
++async fn real_main() -> Result<()> {
+     let args: Vec<String> = env::args().collect();
+
+     let value = args
+@@ -16,7 +16,7 @@
+         .ok_or("specify string")
+         .map_err(|e| anyhow!(e))?;
+
+-    test(value)
++    test(value).await
+ }
+
+ fn main() -> Result<()> {
+@@ -27,7 +27,14 @@
+         .ok_or("failed to get program name")
+         .map_err(|e| anyhow!(e))?;
+
+-    let result = real_main();
++    // Create a multi-threaded async runtime with all features enabled.
++    let rt = tokio::runtime::Builder::new_multi_thread()
++        .enable_all()
++        .build()?;
++
++    // Block on allows a synchronous function to run an async function
++    // and wait for it to finish.
++    let result = rt.block_on(real_main());
+
+     if let Err(e) = result {
+         eprintln!("ERROR: {program_name}: {e:#?}");
 ```
 
 ## Async: Call and wait for an async function from a synchronous one
@@ -538,10 +683,6 @@ match result {
 
   ```rust
   fn main() {
-      let args: Vec<String> = std::env::args().collect();
-  
-      let program_name = &args[0];
-  
       let rt = tokio::runtime::Builder::new_multi_thread()
           .enable_all()
           .build()?;
@@ -551,7 +692,7 @@ match result {
       let result = rt.block_on(real_main());
   
       if let Err(e) = result {
-          eprintln!("ERROR: {}: {:#?}", program_name, e);
+          eprintln!("ERROR: {e:#?}");
           exit(1);
       }
   }
@@ -653,9 +794,9 @@ async fn bar() -> Result<()> {
   
       // Wait for the first one to finish and kill the rest.
       select! {
-          result1 = task1 => { eprintln!("task 1 finished first: result: {:?}", result1); },
-          result2 = task2 => { eprintln!("task 2 finished first: result: {:?}", result2); },
-          result3 = task3 => { eprintln!("task 3 finished first: result: {:?}", result3); },
+          result1 = task1 => { eprintln!("task 1 finished first: result: {result1:?}"); },
+          result2 = task2 => { eprintln!("task 2 finished first: result: {result2:?}"); },
+          result3 = task3 => { eprintln!("task 3 finished first: result: {result3:?}"); },
       }
   }
   ```
