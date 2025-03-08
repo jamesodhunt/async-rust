@@ -407,11 +407,22 @@ handle.join();
 ## Async: How to use async rust
 
 - You need an async _runtime_.
-- The most popular runtime is _Tokio_.
-- _Tokio is an event-driven, non-blocking I/O platform_.
-- Tokio also provides fully async versions of standard (synchronous) libraries.
+- The most popular runtime is [Tokio](https://tokio.rs) ("Tokyo").
+- _Tokio is an event-driven, non-blocking I/O platform_:
+  - Uses thread pools (green threads and native threads), and processes.
+  - Provides fully async versions of standard (synchronous) libraries.
 - Async rust code is similar to threading model, but naturally
   scaleable and easier!
+- Best for I/O bound applications (CPU bound applications don't benefit from speedups).
+  - CPU bound apps can use [rayon](https://docs.rs/rayon/latest/rayon).
+  - See also [mio](https://github.com/tokio-rs/mio) for low-level non-blocking
+    I/O (`epoll(7)` _et al_).
+
+## async caveats
+
+- Since async functions are scheduled by a runtime, you don't know _where_ or
+  _how_ or _when_ they will run!
+- May not be a problem, but depends on use-case!
 
 ## Async: Create an async runtime
 
@@ -1004,6 +1015,29 @@ flushed, leading to confusing (or no!) output.
   > - But note that `tokio::time::sleep()` will **not** block: it's
   >   `async`! ;)
 
+## Mix threads and async
+
+- Can you mix async rust and threads?
+- Yes!
+
+```rust
+async fn my_async_func() {
+    let my_thread = std::thread::spawn(|| -> Result<()> {
+        // ...
+
+        Ok(())
+    });
+
+    // ...
+
+    my_thread
+      .join()
+      .map_err(|e| anyhow!("{e:?}"))
+      .context("failed to join thread")?
+      .context("thread function failed")?;
+}
+```
+
 ## Comparison of sync, threaded and async code
 
 | Programming model | Spawn | Run immediately? | Returns | Wait technique |
@@ -1032,6 +1066,7 @@ flushed, leading to confusing (or no!) output.
 
 ## References
 
+- [Tokio](https://tokio.rs)
 - [Rust async book](https://rust-lang.github.io/async-book)
 - [Tokio tutorial](https://tokio.rs/tokio/tutorial)
 - [Tokio crate docs](https://docs.rs/crate/tokio/latest)
