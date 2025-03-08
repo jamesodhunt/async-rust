@@ -247,7 +247,7 @@ println!("Message outside thread: {msg:?}");
 ## Threads: Simple threads example
 
 ```rust
-use anyhow::Result;
+use anyhow::{anyhow, Context, Result};
 use thread::sleep;
 
 fn run_thread() {
@@ -316,7 +316,7 @@ fn main() {
 ## Threads: Thread function that returns a value
 
 ```rust
-use anyhow::Result;
+use anyhow::{anyhow, Context, Result};
 use thread::sleep;
 
 fn run_thread_and_return_value() -> Result<()> {
@@ -863,6 +863,7 @@ Difficult. You need to make the tasks select on a channel.
 Here's how I made the agent handle shutdown cleanly:
 
 ```rust
+use anyhow::{anyhow, Context, Result};
 use tokio::sync::watch::channel;
 
 // Create a channel
