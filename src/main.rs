@@ -98,6 +98,8 @@ async fn funcs_not_run() -> Result<()> {
     let _ = async_baz();
     let _ = async_slow();
 
+    eprintln!("INFO: No async functions run :(");
+
     Ok(())
 }
 
