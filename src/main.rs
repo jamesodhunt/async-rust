@@ -221,7 +221,10 @@ async fn real_main() -> Result<()> {
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
 
-    let program_name = &args[0];
+    let program_name = args
+        .first()
+        .ok_or("failed to get program name")
+        .map_err(|e| anyhow!(e))?;
 
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
