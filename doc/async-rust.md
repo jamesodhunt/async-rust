@@ -467,7 +467,7 @@ async fn real_main() -> Result<()> {
   }
   ```
 
-- The `async` must come **immediately before** the
+- The `async` **must** come **immediately before** the
   `fn` keyword:
 
   ```rust
@@ -507,7 +507,27 @@ x.await; // Run and wait for the async function to finish
 let y = foo().await;
 ```
 
-> **Note:** `.await` returns a `Result`.
+## async and the future!
+
+**Note:** `.await` returns a `Result`.
+
+- Assigning to an async function results in a `Future`.
+- A rust [`Future`](https://doc.rust-lang.org/std/future/trait.Future.html)
+  is the standard trait (API/interface) for async programming (deferring work).
+- `async` keyword generates code to make the function return a `Future`.
+
+```rust
+async fn foo() -> Result<()> {
+    Ok(())
+}
+
+// x implements "Future<Output = Result<(), Error>>"
+// but you can't specify this here - it's not a type!
+let x = foo();
+
+// result is a Result<()>
+let result = x.await; // Schedule, run and wait for the async function to finish
+```
 
 ## Async: Get result of an async function
 
@@ -1037,6 +1057,24 @@ async fn my_async_func() {
       .context("thread function failed")?;
 }
 ```
+
+## Can main be async?
+
+Yes!
+
+```rust
+// Magic attribute that auto-creates an async runtime.
+#[tokio::main]
+async fn main() {
+    // ...
+}
+```
+
+> **Warning:**
+>
+> - Not recommended since the attribute creates a runtime with an
+>   opinionated set of config settings.
+> - Safer to call `tokio::runtime::Builder::...` youself!
 
 ## Comparison of sync, threaded and async code
 
