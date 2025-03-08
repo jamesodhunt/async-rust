@@ -1,3 +1,10 @@
+---
+title: Threads and async rust
+subtitle: (Originally presented on 2022-10-07)
+author: James O. D. Hunt
+date: 2025-03-10
+---
+
 ## Intro
 
 Grab a coffee or a pillow (your choice! ;)

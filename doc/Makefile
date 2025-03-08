@@ -8,9 +8,6 @@ default: view
 build:
 	pandoc \
 		--standalone \
-		--metadata title="Async rust overview" \
-		--metadata author="James O. D. Hunt" \
-		--metadata date="Presented 7 October 2022" \
 		-f markdown \
 		-t "$(OUT_FMT)" \
 		-i \
