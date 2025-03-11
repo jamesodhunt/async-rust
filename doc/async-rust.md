@@ -854,21 +854,12 @@ async fn waiter() -> Result<()> {
 ```
 ## Async: Future
 
-"Calling" an `async` function with parentheses (round brackets)
-returns a `Future`:
-
-```rust
-use std::future::Future;
-
-async fn foo() {
-    // ...
-}
-
-let future: Future = foo();
-```
-
-`Future` is a _trait_ that defines a single method (`poll()`) to check
-if the value the `Future` represents can be obtained yet.
+- "Calling" an `async` function with parentheses (round brackets)
+  returns a `Future`.
+- A `Future` is a _trait_, **NOT** a type!
+- Hence, you cannot set the type of a variable to `Future`.
+- The `Future` trait defines a single method (`poll()`) to check
+  if the value the `Future` represents can be obtained yet.
 
 ## Async: Blocks
 
