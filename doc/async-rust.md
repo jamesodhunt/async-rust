@@ -424,10 +424,30 @@ handle.join();
   _how_ or _when_ they will run!
 - May not be a problem, but depends on use-case!
 
+## Add tokio to your project
+
+- Adding the tokio runtime to your project is easy!
+- Just run `cargo add`:
+  ```bash
+  $ cargo add tokio
+  ```
+- But, to make your life easier, you may want to enable all features
+  initially:
+
+  ```bash
+  $ cargo add tokio --features full
+  ```
+
+  > **Note:**
+  >
+  > `full` is a tokio-specific "feature" meaning "enable all features"!
+
 ## Async: Create an async runtime
 
 ```rust
 fn main() {
+    // XXX: Requires the 'rt' tokio feature!
+    // See: https://docs.rs/tokio/latest/tokio/runtime/index.html
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()?;
@@ -1030,24 +1050,23 @@ flushed, leading to confusing (or no!) output.
 
 - Can you mix async rust and threads?
 - Yes!
+  ```rust
+  async fn my_async_func() {
+      let my_thread = std::thread::spawn(|| -> Result<()> {
+          // ...
 
-```rust
-async fn my_async_func() {
-    let my_thread = std::thread::spawn(|| -> Result<()> {
-        // ...
+          Ok(())
+      });
 
-        Ok(())
-    });
+      // ...
 
-    // ...
-
-    my_thread
-      .join()
-      .map_err(|e| anyhow!("{e:?}"))
-      .context("failed to join thread")?
-      .context("thread function failed")?;
-}
-```
+      my_thread
+        .join()
+        .map_err(|e| anyhow!("{e:?}"))
+        .context("failed to join thread")?
+        .context("thread function failed")?;
+  }
+  ```
 
 ## Can main be async?
 
