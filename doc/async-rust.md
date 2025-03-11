@@ -79,13 +79,13 @@ let c6 = |value| { println!("{value}"); }
 ```rust
 // closures with no args and a return value
 let c7 = || -> u64 { println!("hello"); 42 };
-let c8 = || -> Result<()> { println!("hello"); Ok(()); }
+let c8 = || -> Result<()> { println!("hello"); Ok(()) };
 
 // closure with 2 args and a return type
-let c9 = |s, n| -> Result<()> { println!("s: {s}, n: {n}"); Ok(()); }
+let c9 = |s, n| -> Result<()> { println!("s: {s}, n: {n}"); Ok(()) };
 
 // closure with 2 explicitly typed args and a return type
-let c10 = |s: &str, n: u64| -> Result<()> { println!("string: {s}, num: {n}"); Ok(()); }
+let c10 = |s: &str, n: u64| -> Result<()> { println!("string: {s}, num: {n}"); Ok(()) };
 ```
 
 ## Closures: move
@@ -773,7 +773,7 @@ async fn foo() {
         // Do something ...
     });
 
-    // XXX: Note the async move block .
+    // XXX: Note the async move block.
     let task_3 = task::spawn(async move {
         // Do something ...
     });
